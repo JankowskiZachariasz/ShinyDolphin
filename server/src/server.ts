@@ -8,13 +8,20 @@ import ws from 'ws';
 import { z } from 'zod';
 import cors from 'cors';
 
+import { TriggerMaster } from './TriggerMaster';
 
 export const pubsubInstance = new PGPubsub('postgresql://postgres:postgres@localhost:5455/postgres');
 export const prisma = new PrismaClient()
 
+export let _tx: PrismaClient;
+
 pubsubInstance.addChannel('channelName', function (channelPayload) {
   console.log(channelPayload);
 });
+
+
+prisma.$use(TriggerMaster.runTriggers)
+
 
 
 // This is how you initialize a context for the server
@@ -32,11 +39,15 @@ const greetingRouter = router({
             .query(async ({ input }) => {
 
               await prisma.$transaction(async (tx) => {
+                //@ts-ignore
+                _tx = tx;
                 // 1. Decrement amount from the sender.
                 await tx.user.create({
+                  
                   data: {email: `${input.name}@prisma.com` },
                 });
-                
+                //@ts-ignore
+                _tx = null;
               })
               await prisma.$disconnect()
             
