@@ -1,6 +1,5 @@
-import TriggerBase from './TriggerBase'
+import TriggerBase from '../_openforce/TriggerBase'
 import { Prisma } from '@prisma/client'
-import { _tx } from '../server'
 
 export default class CarTriggerHandler extends TriggerBase{
 

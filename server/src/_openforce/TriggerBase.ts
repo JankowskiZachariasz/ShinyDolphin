@@ -1,6 +1,6 @@
 export default abstract class TriggerBase{
 
-    async beforeCreate(recordsOld: Array<any>) : Promise<void> {}
+    async beforeCreate(recordsOld: Array<any>, _tx: any) : Promise<void> {}
 
     async afterCreate(recordsOld: Array<any>, recordsNew: Array<any>) : Promise<void> {}
 

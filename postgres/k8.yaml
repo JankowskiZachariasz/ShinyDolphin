@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: metabase-postgres
+ labels:
+   app: metabase-postgres
+spec:
+ selector:
+  matchLabels:
+   app: metabase-postgres
+ template:
+  metadata:
+   labels:
+    app: metabase-postgres
+  spec:
+   containers:
+   - image: localhost:5000/metabase/postgres:latest
+     name: nodejs-api
+     env:
+      - name: POSTGRES_USER
+        value: postgres
+      - name: POSTGRES_PASSWORD
+        value: postgres
+      - name: POSTGRES_DB
+        value: postgres
+     imagePullPolicy: Always
+     ports:
+       - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: metabase-postgres-svc
+spec:
+  selector:
+    app: metabase-postgres
+  ports:
+    - protocol: TCP
+      targetPort: 8080
+      port: 8080

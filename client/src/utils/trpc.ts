@@ -8,30 +8,36 @@ import type { AppRouter } from '../../../server/src/server';
 import { NextPageContext } from 'next';
 import { observable } from '@trpc/server/observable';
 
-function customLink<TRouter extends AnyRouter = AnyRouter>(): TRPCLink<AppRouter> {
+function customLink(): TRPCLink<AppRouter> {
   return (runtime) => {
     return ({op, next}) => {
-      if(op.type === 'subscription' && typeof window !== 'undefined'){
-        const client = createWSClient({
-          url: 'ws://localhost:2022',
-        });
-        return wsLink<AppRouter>({
-          client,
-        })(runtime)({op, next});
-      }
+      // if(op.type === 'subscription' && typeof window !== 'undefined'){
+      //   const client = createWSClient({
+      //     url: 'ws://109.95.171.200:2022',
+      //   });
+      //   return wsLink<AppRouter>({
+      //     client,
+      //   })(runtime)({op, next});
+      // }
       return httpBatchLink({
-        url: 'http://localhost:2022',
+        url: 'http://109.95.171.200:2022',
+        //@ts-ignore
+        headers: () => {
+          return {
+            Authorization: op.context.token,
+          };
+        },
       })(runtime)({op, next});
     }
   }
 }
 
 export const trpc = createTRPCNext<AppRouter>({
-  config() {
+  config({ctx}) {
     return {
       links: [
         customLink()
-      ],
+      ]
     };
   },
   ssr: true,

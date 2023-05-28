@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: metabase-server
+ labels:
+   app: metabase-server
+spec:
+ selector:
+  matchLabels:
+   app: metabase-server
+ template:
+  metadata:
+   labels:
+    app: metabase-server
+  spec:
+   containers:
+   - image: localhost:5000/metabase/server:latest
+     name: nodejs-api
+     imagePullPolicy: Always
+     ports:
+       - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: metabase-server-svc
+spec:
+  selector:
+    app: metabase-server
+  ports:
+    - protocol: TCP
+      targetPort: 8080
+      port: 8080
