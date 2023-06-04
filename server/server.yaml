@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: metabase-server
+ labels:
+   app: metabase-server
+spec:
+ selector:
+  matchLabels:
+   app: metabase-server
+ template:
+  metadata:
+   labels:
+    app: metabase-server
+  spec:
+   containers:
+   - image: 192.168.0.118:5000/metabase/server:latest
+     imagePullPolicy: Always
+     name: metabase-server
+     env:
+     - name: DATABASE_URL
+       valueFrom:
+         secretKeyRef:
+          name: metabase-secrets
+          key: DATABASE_URL
+     - name: CRYPTO_KEY
+       valueFrom:
+         secretKeyRef:
+          name: metabase-secrets
+          key: CRYPTO_KEY
+     - name: CRYPTO_IV
+       valueFrom:
+         secretKeyRef:
+          name: metabase-secrets
+          key: CRYPTO_IV
+     - name: JWT_KEY_PRIVATE
+       valueFrom:
+         secretKeyRef:
+          name: metabase-secrets
+          key: JWT_KEY_PRIVATE
+     - name: JWT_KEY_PUBLIC
+       valueFrom:
+         secretKeyRef:
+          name: metabase-secrets
+          key: JWT_KEY_PUBLIC
+     - name: SERVER_PATH
+       valueFrom:
+         secretKeyRef:
+          name: metabase-secrets
+          key: SERVER_PATH
+     ports:
+       - containerPort: 2022
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: metabase-server-svc
+spec:
+  selector:
+    app: metabase-server
+  ports:
+    - protocol: TCP
+      targetPort: 2022
+      port: 80

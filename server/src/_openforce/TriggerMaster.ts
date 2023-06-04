@@ -14,20 +14,13 @@ export class TriggerMaster{
     public static async runTriggers(params: Prisma.MiddlewareParams, next: (params: Prisma.MiddlewareParams) => Promise<any>,){
         await TriggerMaster.runBeforeTriggers(params);
         const result = await next(params);
-        // const carCreate = await next({
-        //     model: 'Car', 
-        //     action: 'create',
-        //     args: {data: {brand: 'VW', model: 'Passat'}},
-        //     dataPath: params.dataPath,
-        //     runInTransaction: params.runInTransaction
-        // })
-        //console.log('carCreate', carCreate);
         await TriggerMaster.runAfterTriggers(params, result);
         return result;
     }
 
     private static async runBeforeTriggers(params: Prisma.MiddlewareParams){
-        let _tx = params.args?._tx;
+        //@ts-ignore
+        let _tx :never = params.args?._tx;
         delete params.args?._tx;
         if(!params.model){
             return;
@@ -44,17 +37,20 @@ export class TriggerMaster{
                 break;
             }
             case('update'): case('updateMany'):{
-                await handler.beforeUpdate(recordsOld);
+                await handler.beforeUpdate(recordsOld, _tx);
                 break;
             }
             case('delete'): case('deleteMany'):{
-                await handler.beforeDelete(recordsOld);
+                await handler.beforeDelete(recordsOld, _tx);
                 break;
             }
         }
     }
 
     private static async runAfterTriggers(params: Prisma.MiddlewareParams, result : any){
+        //@ts-ignore
+        let _tx :never = params.args?._tx;
+        delete params.args?._tx;
         if(!params.model){
             return;
         }
@@ -67,15 +63,15 @@ export class TriggerMaster{
         let recordsNew : Array<any> = Array.isArray(result)? result : [result];
         switch(params.action){
             case('create'): case('createMany'):{
-                await handler.afterCreate(recordsOld, recordsNew);
+                await handler.afterCreate(recordsOld, recordsNew, _tx);
                 break;
             }
             case('update'): case('updateMany'):{
-                await handler.afterUpdate(recordsOld);
+                await handler.afterUpdate(recordsOld, recordsNew, _tx);
                 break;
             }
             case('delete'): case('deleteMany'):{
-                await handler.afterDelete(recordsOld);
+                await handler.afterDelete(recordsOld, recordsNew, _tx);
                 break;
             }
         }

@@ -1,0 +1,48 @@
+1.	Client
+    a.	HOST
+    b.	NEXTAUTH_URL
+    c.	NEXT_PUBLIC_SECRET
+    d.	JWT_KEY_PRIVATE
+    e.	JWT_KET_PUBLIC
+    f.	NEXT_PUBLIC_TRPC_SERVER_URL (BUILD + RUNTIME)
+
+2.	Server
+    a.	DATABASE_URL
+    b.	CRYPTO_KEY
+    c.	CRYPTO_IV
+    d.	JWT_KEY_PRIVATE
+    e.	JWT_KET_PUBLIC
+    f.  SERVER_PATH
+
+3.	Postgres
+    a.	POSTGRES_USER
+    b.	POSTGRES_PASSWORD
+    c.	POSTGRES_DB
+
+
+
+docker build ./ -f client.Dockerfile -t 192.168.0.118:5000/metabase/client:latest --build-arg="NEXT_PUBLIC_TRPC_SERVER_URL=http://metabase.pl:2022/backend"
+docker run --name metabase_client `
+--env HOST="http://metabase.pl:80" `
+--env NEXTAUTH_URL="http://metabase.pl:80" `
+--env NEXT_PUBLIC_SECRET="MIIBVQIBADANBgkqhkiG9w0BAQEFAASCAT8wggE7AgEAAkEA2Cvf027FD5WnKHm0" `
+--env JWT_KEY_PRIVATE="-----BEGIN PRIVATE KEY-----\nMIIBVQIBADANBgkqhkiG9w0BAQEFAASCAT8wggE7AgEAAkEA2Cvf027FD5WnKHm0\nBna3kSmgaMKaUeFcspQAaWbjFw5VRvvM5xRHa+iyr+XfxwO7J72+uZxhlhpN3FPI\nGeZomwIDAQABAkA4do1KDp7OSUqWGePZ5FxiQDsz4dCpHnI1+s54uXULaimuVxDx\nRdDMCZ1YLdQ1UsbnD27LMnAwMLfFys6zn42hAiEA/7Uh/wczCrK2/NhA3dsQ3uJA\n1vREuPVLeQx1ByH9ZhMCIQDYayp7d6HMBkvNFeZTQn5bgtu47B4IAHoByf/EXyfk\nWQIhANcDNPHf2OB/A/U51dl3MgloUEMvJHYt9Gd1vRXhU9S3AiBhcheF0n8aw7b7\n2CGGWclVYR2YLVD0X2qQRakRfZsTuQIhAMozaUbmcjIqvWKpgzN2WB1c+HiZ2Dy3\nP4BHe6hjWZuV\n-----END PRIVATE KEY-----" `
+--env JWT_KEY_PUBLIC="-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANgr39NuxQ+Vpyh5tAZ2t5EpoGjCmlHh\nXLKUAGlm4xcOVUb7zOcUR2vosq/l38cDuye9vrmcYZYaTdxTyBnmaJsCAwEAAQ==\n-----END PUBLIC KEY-----" `
+--env NEXT_PUBLIC_TRPC_SERVER_URL=http://metabase.pl/backend `
+-p 3000:3000 -d 192.168.0.118:5000/metabase/client:latest
+
+docker build ./ -f server.Dockerfile -t 192.168.0.118:5000/metabase/server:latest
+docker run --name metabase_server `
+--env DATABASE_URL="postgresql://postgres:postgres@192.168.0.109:5455/postgres" `
+--env CRYPTO_KEY="qhgdqubuvhxxrmweqhgdqubuvhxxrmwe" `
+--env CRYPTO_IV="qhgdqubuvhxxrmwe" `
+--env JWT_KEY_PRIVATE="-----BEGIN PRIVATE KEY-----\nMIIBVQIBADANBgkqhkiG9w0BAQEFAASCAT8wggE7AgEAAkEA2Cvf027FD5WnKHm0\nBna3kSmgaMKaUeFcspQAaWbjFw5VRvvM5xRHa+iyr+XfxwO7J72+uZxhlhpN3FPI\nGeZomwIDAQABAkA4do1KDp7OSUqWGePZ5FxiQDsz4dCpHnI1+s54uXULaimuVxDx\nRdDMCZ1YLdQ1UsbnD27LMnAwMLfFys6zn42hAiEA/7Uh/wczCrK2/NhA3dsQ3uJA\n1vREuPVLeQx1ByH9ZhMCIQDYayp7d6HMBkvNFeZTQn5bgtu47B4IAHoByf/EXyfk\nWQIhANcDNPHf2OB/A/U51dl3MgloUEMvJHYt9Gd1vRXhU9S3AiBhcheF0n8aw7b7\n2CGGWclVYR2YLVD0X2qQRakRfZsTuQIhAMozaUbmcjIqvWKpgzN2WB1c+HiZ2Dy3\nP4BHe6hjWZuV\n-----END PRIVATE KEY-----" `
+--env JWT_KEY_PUBLIC="-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANgr39NuxQ+Vpyh5tAZ2t5EpoGjCmlHh\nXLKUAGlm4xcOVUb7zOcUR2vosq/l38cDuye9vrmcYZYaTdxTyBnmaJsCAwEAAQ==\n-----END PUBLIC KEY-----" `
+--env SERVER_PATH=backend `
+-p 2022:2022 -d 192.168.0.118:5000/metabase/server:latest
+
+docker run --name custompg -p 5455:5432 
+-e POSTGRES_USER=postgres 
+-e POSTGRES_PASSWORD=postgres 
+-e POSTGRES_DB=postgres 
+-v ./postgres-data:/var/lib/postgresql/data -d netrunners/pg

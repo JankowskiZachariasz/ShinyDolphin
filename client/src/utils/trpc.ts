@@ -20,13 +20,14 @@ function customLink(): TRPCLink<AppRouter> {
       //   })(runtime)({op, next});
       // }
       return httpBatchLink({
-        url: 'http://109.95.171.200:2022',
         //@ts-ignore
-        headers: () => {
-          return {
-            Authorization: op.context.token,
-          };
-        },
+        url: process.env.NEXT_PUBLIC_TRPC_SERVER_URL,
+        //@ts-ignore
+        // headers: () => {
+        //   return {
+        //     Authorization: op.context.token,
+        //   };
+        // },
       })(runtime)({op, next});
     }
   }

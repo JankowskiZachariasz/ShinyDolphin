@@ -1,5 +1,5 @@
-import { inferAsyncReturnType, initTRPC } from '@trpc/server';
-import { CreateHTTPContextOptions, createHTTPServer } from '@trpc/server/adapters/standalone';
+import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server';
+import { CreateHTTPContextOptions, createHTTPServer } from './_openforce/TrpcStandaloneServer'
 import { CreateWSSContextFnOptions, applyWSSHandler } from '@trpc/server/adapters/ws';
 import { observable } from '@trpc/server/observable';
 import { PrismaClient } from '@prisma/client'
@@ -7,6 +7,7 @@ import PGPubsub  from 'pg-pubsub';
 import ws from 'ws';
 import { z } from 'zod';
 import cors from 'cors';
+import crypto from 'crypto'
 var jwt = require('jsonwebtoken');
 import * as dotenv from 'dotenv'; 
 dotenv.config();
@@ -26,22 +27,18 @@ pubsubInstance.addChannel('channelName', function (channelPayload) {
 prisma.$use(TriggerMaster.runTriggers)
 
 // This is how you initialize a context for the server
-function createContext(opts: CreateHTTPContextOptions | CreateWSSContextFnOptions):{prisma: PrismaClient, user : any} {
+function createContext(opts: CreateHTTPContextOptions | CreateWSSContextFnOptions):{prisma: PrismaClient, user : any, _tx: never} {
   let user;
-  console.log('opts.req.headers.cookie', opts.req.headers.cookie);
   if(typeof opts.req.headers.cookie == 'string'){
     opts.req.headers.cookie.split(' ').forEach(cookie => {
       if(cookie.startsWith(SESSION_COOKIE_NAME)){
         let token = cookie.substring(SESSION_COOKIE_NAME.length, cookie.length);
         const JWT_KEY_PUBLIC = process.env.JWT_KEY_PUBLIC?.replace(/\\n/g, '\n');
         user = jwt.verify(token, JWT_KEY_PUBLIC,  { algorithm: 'RS256', allowInsecureKeySizes: true });
-        console.log('token',token);
-        console.log('user',user);
         return {prisma, user};
       }
     })
   }
-  console.log('user',user);
   //@ts-ignore
   return {prisma, user};
 }
@@ -54,29 +51,45 @@ export const middleware = t.middleware;
 export const publicProcedure = t.procedure;
 export const router = t.router;
 
+const startUserTransaction = middleware(async (opts) => {
+  const { ctx } = opts;
+  if(opts.ctx.user?.email !== 'jankowski.zachariasz@gmail.com'){
+    throw new TRPCError({code: 'UNAUTHORIZED', message: 'Invalid Credentials' });
+  }
+  //@ts-ignore
+  let _tx : never = opts.ctx.prisma;
+  return await opts.next(opts);
+});
+
+
+
+
+const startTx = publicProcedure.use(startUserTransaction);
+
+
 import AuthorizationHandler from './_openforce/AuthorizationHandler'
 
 const greetingRouter = router({
   objects: router({
     login : AuthorizationHandler,
-    Account: publicProcedure.input(z.object({name: z.string()}),)
+    Account: startTx.input(z.object({name: z.string()}),)
             .query(async ({input,ctx:{user, prisma}}) => {
+              let r;
               try{
-                prisma.$transaction(async (tx) =>{
+                await prisma.$transaction(async (tx) =>{
                   //@ts-ignore
-                  let _tx: never = tx;
-                  let r = await tx.user.create({_tx, data: {email: 'VW', password: 'XD', role: 'XD' }})
-                  console.log(r);
+                  let _tx : never = tx;
+                  //@ts-ignore
+                  r = await tx.user.create({_tx, data: {email: 'VW', password: null, role: 'XD' }})
                 })
               }
-              catch(e){
-                console.log(e);
-                prisma.$disconnect;
+              catch (e: any){
+                await prisma.$disconnect();
+                let message = e?.message;
+                throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message});
               }
-              finally{
-                prisma.$disconnect;
-              }
-              return 'done';
+              await prisma.$disconnect();
+              return r;
             })
   }),
   hello: publicProcedure

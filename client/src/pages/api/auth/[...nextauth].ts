@@ -30,13 +30,15 @@ let pages = {
 export default NextAuth({
   // Configure one or more authentication providers
   providers,
+  secret: process.env.NEXT_PUBLIC_SECRET,
   pages,
   cookies: {
     sessionToken: {
       name: `next-auth.session-token`,
       options: {
-        httpOnly: false,
+        httpOnly: true,
         sameSite: 'Lax',
+        domain: 'metabase.pl',
         path: '/',
         secure: false,
       }
