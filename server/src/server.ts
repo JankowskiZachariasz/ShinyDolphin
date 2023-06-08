@@ -2,7 +2,8 @@ import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server';
 import { CreateHTTPContextOptions, createHTTPServer } from './_openforce/TrpcStandaloneServer'
 import { CreateWSSContextFnOptions, applyWSSHandler } from '@trpc/server/adapters/ws';
 import { observable } from '@trpc/server/observable';
-import { PrismaClient } from '@prisma/client'
+import { User } from './_openforce/Models'
+import Database from './_openforce/Database';
 import PGPubsub  from 'pg-pubsub';
 import ws from 'ws';
 import { z } from 'zod';
@@ -12,22 +13,27 @@ var jwt = require('jsonwebtoken');
 import * as dotenv from 'dotenv'; 
 dotenv.config();
 
+
+
+if(typeof process.env.DATABASE_URL !== 'string'){
+  process.exit(0);
+}
+
 import { TriggerMaster } from './_openforce/TriggerMaster';
 
 export const pubsubInstance = new PGPubsub(process.env.DATABASE_URL);
-export const prisma = new PrismaClient()
-export const SESSION_COOKIE_NAME = 'next-auth.session-token='
 
+export const SESSION_COOKIE_NAME = 'next-auth.session-token='
 
 pubsubInstance.addChannel('channelName', function (channelPayload) {
   console.log(channelPayload);
 });
 
 
-prisma.$use(TriggerMaster.runTriggers)
+//prisma.$use(TriggerMaster.runTriggers)
 
 // This is how you initialize a context for the server
-function createContext(opts: CreateHTTPContextOptions | CreateWSSContextFnOptions):{prisma: PrismaClient, user : any, _tx: never} {
+function createContext(opts: CreateHTTPContextOptions | CreateWSSContextFnOptions):{user : any, _tx: never} {
   let user;
   if(typeof opts.req.headers.cookie == 'string'){
     opts.req.headers.cookie.split(' ').forEach(cookie => {
@@ -35,16 +41,15 @@ function createContext(opts: CreateHTTPContextOptions | CreateWSSContextFnOption
         let token = cookie.substring(SESSION_COOKIE_NAME.length, cookie.length);
         const JWT_KEY_PUBLIC = process.env.JWT_KEY_PUBLIC?.replace(/\\n/g, '\n');
         user = jwt.verify(token, JWT_KEY_PUBLIC,  { algorithm: 'RS256', allowInsecureKeySizes: true });
-        return {prisma, user};
+        return {user};
       }
     })
   }
   //@ts-ignore
-  return {prisma, user};
+  return {user};
 }
 type Context = inferAsyncReturnType<typeof createContext>;
 type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
-type PrismaTx = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use">;
 const t = initTRPC.context<Context>().create();
 
 export const middleware = t.middleware;
@@ -68,28 +73,33 @@ const startTx = publicProcedure.use(startUserTransaction);
 
 
 import AuthorizationHandler from './_openforce/AuthorizationHandler'
+import { Prisma } from '@prisma/client';
 
 const greetingRouter = router({
   objects: router({
     login : AuthorizationHandler,
-    Account: startTx.input(z.object({name: z.string()}),)
-            .query(async ({input,ctx:{user, prisma}}) => {
-              let r;
-              try{
-                await prisma.$transaction(async (tx) =>{
-                  //@ts-ignore
-                  let _tx : never = tx;
-                  //@ts-ignore
-                  r = await tx.user.create({_tx, data: {email: 'VW', password: null, role: 'XD' }})
-                })
-              }
-              catch (e: any){
-                await prisma.$disconnect();
-                let message = e?.message;
-                throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message});
-              }
-              await prisma.$disconnect();
-              return r;
+    Account: publicProcedure.input(z.object({name: z.string()}),)
+            .query(async ({input,ctx:{user}}) => {
+              console.log('jestesmy', 'tutaj1');
+
+
+              await Database.runTransaction(async db => {
+                let u : User = {
+                  _modelName: 'User', 
+                  email: 'Zackingooo@gmail.com',
+                  password: 'Dembek',
+                  role: 'Szyszka',
+                  mfaRequired: false
+                }
+                let results = await db.insert([u]);
+                console.log(('results'), results.get(u._modelName));
+                return;
+              })
+
+
+
+
+
             })
   }),
   hello: publicProcedure

@@ -1,18 +1,13 @@
 import TriggerBase from '../_openforce/TriggerBase'
-import { Prisma } from '@prisma/client'
+import { SObject } from '../_openforce/Models'
 
 export default class CarTriggerHandler extends TriggerBase{
 
-    override async beforeCreate(recordsOld : Array<Prisma.CarCreateManyInput>){
-        //_tx.
+    override async beforeInsert(recordsOld : Array<SObject>){
         console.log('running before create car')
-        console.log('recordsOld', recordsOld);
-        console.log('recordsOld[0]', recordsOld[0]);
     }
-    override async afterCreate(recordsOld : Array<Prisma.CarCreateManyInput>, recordsNew : Array<Prisma.CarCreateManyInput>){
+    override async afterInsert( recordsNew : Array<SObject>){
         console.log('running after create car')
-        console.log('recordsOld', recordsOld);
-        console.log('recordsNew', recordsNew);
     }
 
 }

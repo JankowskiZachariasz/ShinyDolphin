@@ -1,22 +1,19 @@
 import TriggerBase from '../_openforce/TriggerBase'
-import { Prisma, PrismaClient } from '@prisma/client'
+import { Car, User } from '../_openforce/Models'
+import Database from '../_openforce/Database';
 
 export default class UserTriggerHandler extends TriggerBase{
 
-    override async beforeCreate(recordsOld : Array<Prisma.UserCreateManyInput>, _tx: Omit<PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use">){
-        //@ts-ignore
-        let _nexttx :never = _tx;
+    override async beforeInsert(recordsOld : Array<User>, db : Database){
         console.log('running before create user')
-        console.log('recordsOld', recordsOld);
-        console.log('recordsOld[0]', recordsOld[0]);
-        let r = await _tx.car.create({data: {brand: 'VW', model: 'A4'}, _tx: _nexttx })
-        console.log('r', r);
     }
-    override async afterCreate(recordsOld : Array<Prisma.UserCreateManyInput>, recordsNew : Array<Prisma.UserCreateManyInput>){
+    override async afterInsert( recordsNew : Array<User>, db : Database){
         console.log('running after create user')
-        console.log('recordsOld', recordsOld);
-        console.log('recordsNew', recordsNew);
-        
+        let u : Car = {
+            _modelName: 'Car', 
+            brand: 'SKODA'
+        };
+        await db.insert([u]);
     }
 
 }
