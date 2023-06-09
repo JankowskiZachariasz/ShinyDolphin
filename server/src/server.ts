@@ -3,6 +3,7 @@ import { CreateHTTPContextOptions, createHTTPServer } from './_openforce/TrpcSta
 import { CreateWSSContextFnOptions, applyWSSHandler } from '@trpc/server/adapters/ws';
 import { observable } from '@trpc/server/observable';
 import { User } from './_openforce/Models'
+import UserSelector from './classes/UserSelector'
 import Database from './_openforce/Database';
 import PGPubsub  from 'pg-pubsub';
 import ws from 'ws';
@@ -84,19 +85,21 @@ const greetingRouter = router({
 
 
               await Database.runTransaction(async db => {
-                let u : User = {
-                  _modelName: 'User', 
-                  email: 'Zackingooo@gmail.com',
-                  password: 'Dembek',
-                  role: 'Szyszka',
-                  mfaRequired: false
-                }
-                let results = await db.insert([u]);
-                console.log(('results'), results.get(u._modelName));
-                return;
+
+                let u1 : User = {
+                  _modelName: 'User',
+                  email: 'jankowski.zachariasz@gmail.com',
+                  password: '1234567',
+                  role: 'System Administrator'
+                };
+                await db.insert([u1]);
+                console.log('u1', u1);
+                const userSelector = new UserSelector(db);
+                let users : Array<User> = await userSelector.selectAllUsers();
+                let results = await db.delete(users);
+                console.log('resultsUpdate', results.get('User')?.command);
+                console.log('resultsUpdate', results.get('User')?.statement);
               })
-
-
 
 
 
