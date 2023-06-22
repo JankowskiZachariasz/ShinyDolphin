@@ -1,12 +1,18 @@
-import { getSession, SessionProvider } from "next-auth/react";
+import { SessionProvider } from "next-auth/react";
 import type { AppProps } from 'next/app';
 import { trpc } from '../utils/trpc';
+import { useEffect, useContext } from "react";
+import { AppContext } from "../utils/context";
+import '../styles/global.css';
+import { ContextProvider } from '../utils/context'
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <SessionProvider>
-     <Component {...pageProps} />
-    </SessionProvider>
+    <ContextProvider>
+      <SessionProvider>
+        <Component {...pageProps} />
+      </SessionProvider>
+    </ContextProvider>
   );
 };
 //@ts-ignore

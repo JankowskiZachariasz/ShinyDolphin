@@ -3,7 +3,7 @@ import postgres from 'postgres'
 import { SObject } from './Models'
 import { Prisma } from '@prisma/client'
 import DbUtil from './DatabaseUtility'
-import SObjectSelector from '../classes/SObjectSelector'
+import SObjectSelector from './SObjectSelector'
 import { TriggerMaster } from './TriggerMaster'
 import { TRPCError } from '@trpc/server';
 
@@ -42,7 +42,7 @@ export default class Database{
     async insert( records : Array<SObject>){
         let toReturn = new Map<Prisma.ModelName, postgres.RowList<postgres.Row[]>>([]);
         let mappedRecords = DbUtil.mapRecordByType(records);
-        for (const _modelName of mappedRecords.keys()) {
+        for (const _modelName of Array.from(mappedRecords.keys())) {
             const preInsertRecords = mappedRecords.get(_modelName);
             if(!preInsertRecords || !preInsertRecords.length){
                 continue;
@@ -65,7 +65,7 @@ export default class Database{
     async update( records : Array<SObject>){
         let toReturn = new Map<Prisma.ModelName, postgres.RowList<postgres.Row[]>>([]);
         let mappedRecords = DbUtil.mapRecordByType(records);
-        for (const _modelName of mappedRecords.keys()) {
+        for (const _modelName of Array.from(mappedRecords.keys())) {
             const preUpdateRecords  = mappedRecords.get(_modelName);
             if(!preUpdateRecords || !preUpdateRecords.length){
                 continue;
@@ -95,7 +95,7 @@ export default class Database{
     async delete( records : Array<SObject>){
         let toReturn = new Map<Prisma.ModelName, postgres.RowList<postgres.Row[]>>([]);
         let mappedRecords = DbUtil.mapRecordByType(records);
-        for (const _modelName of mappedRecords.keys()) {
+        for (const _modelName of Array.from(mappedRecords.keys())) {
             const preDeleteRecords = mappedRecords.get(_modelName);
             if(!preDeleteRecords || !preDeleteRecords.length){
                 continue;

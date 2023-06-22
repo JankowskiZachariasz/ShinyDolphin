@@ -153,6 +153,9 @@ const appRouter = router({
   post: postRouter,
 });
 
+//console.log(appRouter.greeting.hello._def)
+//console.log(appRouter.greeting.hello._procedure)
+
 export type AppRouter = typeof appRouter;
 
 // http server

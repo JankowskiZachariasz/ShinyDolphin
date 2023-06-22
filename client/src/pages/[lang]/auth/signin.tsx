@@ -1,6 +1,6 @@
 import type { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { getCsrfToken } from "next-auth/react"
-import { trpc } from '../../utils/trpc';
+import { trpc } from '../../../utils/trpc';
 import { TRPCClientError } from '@trpc/client';
 import { useRef, useState } from 'react';
 
@@ -22,13 +22,13 @@ export default function SignIn({ csrfToken }: InferGetServerSidePropsType<typeof
           try{
             //@ts-ignore
             let loginResult = await client.greeting.objects.login.login.query({email: emailInput.current?.value, password: passwordInput.current?.value});
-            if(loginResult.status === 'pending' && loginResult.mfaToken){
-              setMfaToken(loginResult.mfaToken)
-              setStep(2);
-            }
-            if(loginResult.status === 'success' && loginResult.token){
-              await finishLoginFlow(loginResult.token, loginResult.email);
-            }
+            // if(loginResult.status === 'pending' && loginResult.mfaToken){
+            //   setMfaToken(loginResult.mfaToken)
+            //   setStep(2);
+            // }
+            // if(loginResult.status === 'success' && loginResult.token){
+            //   await finishLoginFlow(loginResult.token, loginResult.email);
+            // }
             setErrorMessage('');
           }
           catch(e : unknown){

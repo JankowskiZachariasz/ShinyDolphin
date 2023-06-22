@@ -1,6 +1,6 @@
-import Database from '../_openforce/Database'
+import Database from './Database'
 import { Prisma } from '@prisma/client'
-import DatabaseUtility from '../_openforce/DatabaseUtility'
+import DatabaseUtility from './DatabaseUtility'
 
 
 export default class SObjectSelector{

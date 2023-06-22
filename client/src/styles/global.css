@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.enable-scroll {
+    overflow-y: scroll;
+  }
+  
+.disable-scroll {
+overflow-y: hidden;
+position: relative;
+}
