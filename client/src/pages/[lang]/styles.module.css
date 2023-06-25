@@ -1,9 +1,0 @@
-.enableScroll {
-  overflow-y: scroll;
-}
-
-.disableScroll {
-  overflow-y: hidden;
-  overscroll-behavior: contain;
-  position: relative;
-}

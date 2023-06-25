@@ -1,0 +1,35 @@
+.userMenuGrid{
+  grid-template-columns: 1fr 2fr;
+
+}
+
+.userAvatarBig{
+  height: 70px;
+  width: 70px;
+}
+
+.userMenuScrollableNavigation{
+  max-height: 30vh;
+  padding-bottom: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.userMenuScrollableNavigation::-webkit-scrollbar{
+  width: 5px;
+  
+}
+
+.userMenuScrollableNavigation::-webkit-scrollbar-track {
+  background: rgb(17 24 39);
+}
+
+/* Handle */
+.userMenuScrollableNavigation::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+/* Handle on hover */
+.userMenuScrollableNavigation::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

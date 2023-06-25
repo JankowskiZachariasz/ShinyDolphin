@@ -7,4 +7,5 @@ export const Labels = {
 
 export const LabelsUsage = {
     '/{0}': {SD_helloWorld: Labels.SD_helloWorld},
+    '/{0}/services': {SD_helloWorld: Labels.SD_helloWorld},
 }

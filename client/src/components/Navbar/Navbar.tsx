@@ -1,245 +1,363 @@
-import { Fragment, useState, useContext } from "react";
-import ReactSVG from 'react-svg';
-import { Disclosure, Menu, Transition } from "@headlessui/react";
-import { Bars3Icon, BellIcon, XMarkIcon, UserCircleIcon } from "@heroicons/react/24/outline";
-import anonUser from '../../icons/anon-user.jpg'
-import styles from './styles.module.css'
-import { AppContext } from '../../utils/context'
+import { Fragment, useState, useContext, forwardRef, useRef, useEffect, useCallback } from "react";
+import type { Ref, MouseEvent  } from "react";
+import { Menu, Transition } from "@headlessui/react";
+import { Bars3Icon, XMarkIcon, UserCircleIcon, BellIcon } from "@heroicons/react/24/outline";
+import styles from "./navbar.module.css";
+import { AppContext } from "../../utils/context";
+import { UserMenu } from "../UserMenu/UserMenu";
+import { NotificationMenu } from "../NotificationsMenu/NotificationMenu";
+import logo from "../../icons/logo.svg";
 
 const navigation = [
-  { name: "1Dashboard", href: "#", current: true },
-  { name: "2Team", href: "#", current: false },
-  { name: "3Projects", href: "#", current: false },
-  { name: "1Dashboard", href: "#", current: false },
-  // { name: "1Dashboard", href: "#", current: true },
-  // { name: "2Team", href: "#", current: false },
-  // { name: "3Projects", href: "#", current: false },
-  // { name: "1Dashboard", href: "#", current: false },
-  // { name: "1Dashboard", href: "#", current: true },
-  // { name: "2Team", href: "#", current: false },
-  // { name: "3Projects", href: "#", current: false },
-  // { name: "1Dashboard", href: "#", current: false },
-  // { name: "1Dashboard", href: "#", current: true },
-  // { name: "2Team", href: "#", current: false },
-  // { name: "3Projects", href: "#", current: false },
-  // { name: "1Dashboard", href: "#", current: false },
-  // { name: "1Dashboard", href: "#", current: true },
-  // { name: "2Team", href: "#", current: false },
-  // { name: "3Projects", href: "#", current: false },
-  // { name: "1Dashboard", href: "#", current: false },
-  // { name: "1Dashboard", href: "#", current: true },
-  // { name: "2Team", href: "#", current: false },
-  // { name: "3Projects", href: "#", current: false },
-  // { name: "1Dashboard", href: "#", current: false },
+  { name: "Home", href: "/", current: true },
+  { name: "Services", href: "/services", current: false },
+  { name: "About us", href: "#", current: false },
+  { name: "Order cleaning", href: "#", current: false },
 ];
+
+const userMenuNavigation = [
+  { name: "Order history", href: "/services", current: false },
+  { name: "Jobs", href: "#", current: false },
+  { name: "Order history", href: "/services", current: false },
+];
+
+const userNotifications = [
+  { message: "Order history", read: false },
+  { message: "Order history2", read: false },
+  { message: "Order history3", read: false },
+  { message: "Order history4", read: false },
+  { message: "Order history5", read: false },
+  { message: "Order history6", read: false },
+  { message: "Order history7", read: false },
+  { message: "Order history", read: false },
+  { message: "Order history2", read: false },
+  { message: "Order history3", read: false },
+  { message: "Order history4", read: false },
+  { message: "Order history5", read: false },
+  { message: "Order history6", read: false },
+  { message: "Order history7", read: false },
+];
+
 //@ts-ignore
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
+function classNames(...classes) { return classes.filter(Boolean).join(" ");}
 
 export default function IndexPage() {
-  const { setIsScrollLocked, isScrollLocked } = useContext(AppContext);
+  const { setIsScrollLocked } = useContext(AppContext);
   const [isMobileNavigationMenuOpen, seIsMobileNavigationMenuOpen] = useState(false);
   const [isUserMenuOpen, seIsUserMenuOpen] = useState(false);
+  const [isNotificationMenuOpen, seIsNotificationMenuOpen] = useState(false);
+
+  const DesktopUserMenuRef :React.RefObject<HTMLInputElement> = useRef(null);
+  DesktopUserMenuRef.current;
+
+  const autoFocus = useCallback((element : HTMLDivElement) => {
+    if (element) {
+      element.focus();
+    }
+  }, []);
+
+  const closeAllMenues = () => {
+    seIsUserMenuOpen(false);
+    seIsMobileNavigationMenuOpen(false);
+    seIsNotificationMenuOpen(false);
+  }
 
   const toggleMobileNavigationMenu = () => {
-    seIsUserMenuOpen(false)
+    closeAllMenues();
     setIsScrollLocked(!isMobileNavigationMenuOpen);
     seIsMobileNavigationMenuOpen(!isMobileNavigationMenuOpen);
-  }
+  };
 
-  const toggleUserMenu = () => {
-    seIsMobileNavigationMenuOpen(false)
+  const toggleUserMenu = (desiredState? :boolean) => {
+    if(desiredState === true || desiredState === false){
+      closeAllMenues();
+      seIsUserMenuOpen(desiredState);
+      return;
+    }
+    closeAllMenues();
     seIsUserMenuOpen(!isUserMenuOpen);
-  }
+  };
 
-  const toggleMobileUserMenu = () => {
-    seIsMobileNavigationMenuOpen(false)
+  const toggleMobileUserMenu = (desiredState? :boolean) => {
+    if(desiredState === true || desiredState === false){
+      closeAllMenues();
+      setIsScrollLocked(desiredState);
+      seIsUserMenuOpen(desiredState);
+      return;
+    }
+    closeAllMenues();
     setIsScrollLocked(!isUserMenuOpen);
     seIsUserMenuOpen(!isUserMenuOpen);
-  }
+  };
 
+  const toggleNotificationMenu = (desiredState? :boolean) => {
+    if(desiredState === true || desiredState === false){
+      closeAllMenues();
+      seIsNotificationMenuOpen(desiredState);
+      return;
+    }
+    closeAllMenues();
+    seIsNotificationMenuOpen(!isNotificationMenuOpen);
+  };
+
+  const toggleMobileNotificationMenu = (desiredState? :boolean) => {
+    if(desiredState === true || desiredState === false){
+      closeAllMenues();
+      setIsScrollLocked(desiredState);
+      seIsNotificationMenuOpen(desiredState);
+      return;
+    }
+    closeAllMenues();
+    setIsScrollLocked(!isNotificationMenuOpen);
+    seIsNotificationMenuOpen(!isNotificationMenuOpen);
+  };
 
   return (
-        <>
-          <div className={classNames("bg-gray-800", styles.navbarZIndex)}>
-            <nav className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-              <div className="relative flex h-14 sm:h-16 items-center justify-between">
+    <>
+      <div className={classNames("bg-gray-800", styles.navbarZIndex)}>
+        <nav className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div className="relative flex h-14 sm:h-16">
+            <div className="flex flex-1 items-center sm:justify-start">
+              <Logo href="/"></Logo>
+              <DesktopNavigation navigation={navigation}></DesktopNavigation>
+            </div>
+            <div className="inset-y-0 right-0 flex justify-center items-center sm:static sm:inset-auto sm:ml-6 sm:pr-0">
 
-                <div className="flex flex-1 items-center sm:justify-start">
-                  <div className="flex flex-shrink-0 items-center">
-                    <img
-                      className="pl-1 block h-8 w-auto lg:hidden"
-                      src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                      alt="Your Company"
-                    />
-                    <img
-                      className="pl-1 hidden h-8 w-auto lg:block"
-                      src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                      alt="Your Company"
-                    />
-                  </div>
-                  <div className="hidden sm:ml-6 sm:block">
-                    <div className="flex space-x-4">
-                      {navigation.map((item) => (
-                        <a
-                          key={item.name}
-                          href={item.href}
-                          className={classNames(
-                            item.current
-                              ? "bg-gray-900 text-white"
-                              : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                            "rounded-md px-3 py-2 text-sm font-medium"
-                          )}
-                          aria-current={item.current ? "page" : undefined}
-                        >
-                          {item.name}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute inset-y-0 right-10 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                  {/* Profile dropdown */}
-                  {/* <button className="flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                    onClick={toggleUserMenu}>
-                        <span className="sr-only">Open user menu</span>
-                        <img
-                          className="h-8 w-8 rounded-full"
-                          src={anonUser.src}
-                          alt=""
-                        />
-                  </button> */}
-                  <ProfileButton
-                    additionalClasses="hidden sm:block"
-                    onClickHandler={toggleUserMenu}
-                    additionalAvatarClasses="h-8 w-8"
-                  ></ProfileButton>
-                  <ProfileButton
-                    additionalClasses="sm:hidden"
-                    onClickHandler={toggleMobileUserMenu}
-                    additionalAvatarClasses="h-8 w-8"
-                  ></ProfileButton>
-                  <Menu as="div" className="relative ml-3 z-10">
-                    <div>
-                      
-                    </div>
-                    <Transition
-                      as={Fragment}
-                      show={isUserMenuOpen}
-                      enter="transition ease-out duration-100"
-                      enterFrom="transform opacity-0 scale-95"
-                      enterTo="transform opacity-100 scale-100"
-                      leave="transition ease-in duration-75"
-                      leaveFrom="transform opacity-100 scale-100"
-                      leaveTo="transform opacity-0 scale-95"
-                    >
-                      <Menu.Items className="absolute hidden sm:block right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <Menu.Item>
-                          {({ active }) => (
-                            <a
-                              href="#"
-                              className={classNames(
-                                active ? "bg-gray-100" : "",
-                                "block px-4 py-2 text-sm text-gray-700"
-                              )}
-                            >
-                              Your Profile
-                            </a>
-                          )}
-                        </Menu.Item>
-                        <Menu.Item>
-                          {({ active }) => (
-                            <a
-                              href="#"
-                              className={classNames(
-                                active ? "bg-gray-100" : "",
-                                "block px-4 py-2 text-sm text-gray-700"
-                              )}
-                            >
-                              Settings
-                            </a>
-                          )}
-                        </Menu.Item>
-                        <Menu.Item>
-                          {({ active }) => (
-                            <a
-                              href="#"
-                              className={classNames(
-                                active ? "bg-gray-100" : "",
-                                "block px-4 py-2 text-sm text-gray-700"
-                              )}
-                            >
-                              Sign out
-                            </a>
-                          )}
-                        </Menu.Item>
-                      </Menu.Items>
-                    </Transition>
-                  </Menu>
-                </div>
-                <div className="absolute inset-y-0 right-0 flex items-center sm:hidden">
-                  {/* Mobile menu button*/}
-                  <button className="inline-flex items-center justify-center rounded-md p-1 mr-1 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-                    onClick={() => toggleMobileNavigationMenu()}>
-                    <span className="sr-only">Open main menu</span>
-                    {isMobileNavigationMenuOpen ? (
-                      <XMarkIcon className="block h-8 w-8" aria-hidden="true" />
-                    ) : (
-                      <Bars3Icon className="block h-8 w-8" aria-hidden="true" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </nav>
+              {/* Notifications */}
+              <FloatingMenu
+                isUserMenuOpen={isNotificationMenuOpen}
+                hideItselfMobile={()=>toggleMobileNotificationMenu(false)} 
+                hideItselfDesktop={()=>toggleNotificationMenu(false)}>
+                <NotificationMenu notifications={userNotifications}/>
+              </FloatingMenu>
+              <NavigationIconButton
+                additionalClasses="hidden sm:block hover:bg-gray-700 hover:text-white"
+                onClickHandler={toggleNotificationMenu}
+                additionalIconClasses={classNames("h-7 w-7 stroke-1.5",styles.bellIconDimensions)}
+                Icon = {BellIcon}
+                onMouseDown={(event)=>{if(isNotificationMenuOpen)event.preventDefault();}}
+                isActive={isNotificationMenuOpen}
+              ></NavigationIconButton>
+              <NavigationIconButton
+                additionalClasses="sm:hidden"
+                onClickHandler={toggleMobileNotificationMenu}
+                additionalIconClasses={classNames("h-7 w-7 stroke-1",styles.bellIconDimensions)}
+                Icon = {BellIcon}
+                onMouseDown={(event)=>{if(isNotificationMenuOpen)event.preventDefault();}}
+                isActive={isNotificationMenuOpen}
+              ></NavigationIconButton>
+
+              {/* User Menu */}
+              <FloatingMenu
+                isUserMenuOpen={isUserMenuOpen}
+                hideItselfMobile={()=>toggleMobileUserMenu(false)} 
+                hideItselfDesktop={()=>toggleUserMenu(false)}>
+                <UserMenu userMenu={userMenuNavigation} ></UserMenu>
+              </FloatingMenu>
+              <NavigationIconButton
+                additionalClasses="hidden sm:block hover:bg-gray-700 hover:text-white"
+                onClickHandler={toggleUserMenu}
+                additionalIconClasses="h-8 w-8 stroke-1.5"
+                onMouseDown={(event)=>{if(isUserMenuOpen)event.preventDefault();}}
+                isActive={isUserMenuOpen}
+                Icon = {UserCircleIcon}
+              ></NavigationIconButton>
+              <NavigationIconButton
+                additionalClasses="sm:hidden"
+                onClickHandler={toggleMobileUserMenu}
+                additionalIconClasses="h-8 w-8 stroke-1"
+                onMouseDown={(event)=>{if(isUserMenuOpen)event.preventDefault();}}
+                isActive={isUserMenuOpen}
+                Icon = {UserCircleIcon}
+              ></NavigationIconButton>
+
+              <Toggler isMenuOpen={isMobileNavigationMenuOpen}toggleMenu={toggleMobileNavigationMenu}></Toggler>
+            </div>
           </div>
-          {isMobileNavigationMenuOpen?(
-            <div className={classNames("sm:hidden w-full bg-gray-900", styles.navbarOverlay)}>
-              <div className={classNames("space-y-1 px-2 pb-3 pt-2", styles.navbarOverlayMenu)}>
-                {navigation.map((item) => (
-                  <button
-                    key={item.name}
-                    className={classNames(
-                      item.current
-                        ? "bg-gray-900 text-white"
-                        : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                      "block rounded-md px-3 py-2 text-base font-medium"
-                    )}
-                    aria-current={item.current ? "page" : undefined}
-                  >
-                    {item.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ):''}
+        </nav>
+      </div>
 
-          {isUserMenuOpen?(
-            <div className={classNames("sm:hidden w-full bg-gray-900", styles.navbarOverlay)}>
-              <div className={classNames("space-y-1 px-2 pb-3 pt-2", styles.navbarOverlayMenu)}>
-                <h1>This is your awesome user menu</h1>
-              </div>
+      {isMobileNavigationMenuOpen ? (
+        <Fragment>
+          <div className={classNames("sm:hidden w-full bg-gray-900",styles.navbarOverlay)}>
+            <div className={classNames("space-y-1 px-2 pb-3 pt-2",styles.navbarOverlayMenu )}>
+              <MobileNavigation navigation={navigation}></MobileNavigation>
             </div>
-          ):''}
-        </>
+          </div>
+        </Fragment>
+      ) : ( "")}
+
+    </>
   );
 }
 
-export const ProfileButton = (props : {
-  onClickHandler : ()=> void, 
-  additionalClasses: string
-  additionalAvatarClasses: string
-}) =>{
+const Logo = (props: { href?: string }) => {
   return (
     <Fragment>
-      <button className={classNames(props.additionalClasses, "flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800")}
-        onClick={() => props.onClickHandler()}>
-            <span className="sr-only">Open user menu</span>
-            <img className={classNames(props.additionalAvatarClasses, "rounded-full ")}
-              src={anonUser.src}
-              alt=""
-            />
+      <a href={props.href}>
+        <div className="flex flex-shrink-0 items-center">
+          <img
+            className="pl-2 block h-10 w-auto"
+            src={logo.src}
+            alt="Your Company"
+          />
+          <span className="text-turquoise-100 text-lg font-medium font-sans pl-2 mr-5">
+            Cleanwave
+          </span>
+        </div>
+      </a>
+    </Fragment>
+  );
+};
+
+const DesktopNavigation = (props: {
+  navigation: Array<{ name: string; href: string; current: boolean }>;
+}) => {
+  return (
+    <Fragment>
+      <div className="hidden sm:ml-6 sm:block">
+        <div className="flex space-x-4">
+          {props.navigation.map((item) => (
+            <a
+              key={item.name}
+              href={item.href}
+              className={classNames(
+                item.current
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-300 hover:bg-gray-700 hover:text-white",
+                "rounded-md px-3 py-2 text-sm font-medium"
+              )}
+              aria-current={item.current ? "page" : undefined}
+            >
+              {item.name}
+            </a>
+          ))}
+        </div>
+      </div>
+    </Fragment>
+  );
+};
+
+const MobileNavigation = (props: {
+  navigation: Array<{ name: string; href: string; current: boolean }>;
+}) => {
+  return (
+    <Fragment>
+      {props.navigation.map((item) => (
+        <a
+        href={item.href}
+          key={item.name}
+          className={classNames(
+            item.current
+              ? "bg-gray-900 text-white"
+              : "text-gray-300 hover:bg-gray-700 hover:text-white",
+            "block rounded-md px-3 py-2 text-base font-medium"
+          )}
+          aria-current={item.current ? "page" : undefined}
+        >
+          {item.name}
+        </a>
+      ))}
+    </Fragment>
+  );
+};
+
+const Toggler = (props: { 
+  toggleMenu: () => void, 
+  isMenuOpen: boolean
+}) => {
+  return (
+    <Fragment>
+      <button
+        className={classNames(
+          "sm:hidden inline-flex items-center justify-center rounded-md p-1 mr-3 text-gray-400",
+          props.isMenuOpen?('bg-gray-700 text-white'):('')
+        )}
+        onClick={() => props.toggleMenu()}
+      >
+        <span className="sr-only">Open main menu</span>
+        {props.isMenuOpen ? (
+          <XMarkIcon className="block h-8 w-8" aria-hidden="true" />
+        ) : (
+          <Bars3Icon className="block h-8 w-8" aria-hidden="true" />
+        )}
       </button>
     </Fragment>
-  )
-}
+  );
+};
+
+const NavigationIconButton = (props: {
+  onClickHandler: () => void,
+  onMouseDown?: (event: MouseEvent<HTMLButtonElement>) => void,
+  additionalClasses: string,
+  additionalIconClasses: string,
+  isActive?: boolean,
+  Icon: React.ForwardRefExoticComponent<any>
+}) => {
+  return (
+    <Fragment>
+      <button
+        className={classNames(
+          props.additionalClasses,
+          "inline-flex items-center justify-center rounded-md p-1 mr-1 text-gray-400",
+          props.isActive?('bg-gray-700 text-white'):('')
+        )}
+        onClick = {() => props.onClickHandler()}
+        unselectable="on"
+        onMouseDown = {props.onMouseDown? props.onMouseDown : ()=>{}}
+      >
+        <span className="sr-only">Open user menu</span>
+        <props.Icon className={classNames(props.additionalIconClasses, "rounded-full")} aria-hidden="true" />
+      </button>
+    </Fragment>
+  );
+};
+
+const FloatingMenu = (props: React.PropsWithChildren<{
+  isUserMenuOpen: boolean,
+  hideItselfMobile: ()=>void,
+  hideItselfDesktop: ()=>void,
+}>) => {
+  
+  const autoFocus = useCallback((element : HTMLDivElement) => {
+    if (element) {
+      element.focus();
+    }
+  }, []);
+
+  return (
+    <span>
+      {/* Desktop */}
+      <span className="hidden sm:block">
+      <Transition
+        as={Fragment}
+        show={props.isUserMenuOpen}>
+      <div tabIndex={0} 
+        ref={autoFocus} 
+        onClick={event=>{event.stopPropagation();}}
+        onBlur={props.hideItselfDesktop}
+        className={"ml-3 w-96 z-10 space-y-1 p-2 pb-0 shadow-google rounded-lg bg-gray-900 absolute top-16 right-0"}>
+        <div className="">
+          {props.children}
+        </div>
+      </div>
+    </Transition>
+      </span>
+        {/* Mobile */}
+      <span className="sm:hidden">
+        <Transition
+        as={Fragment}
+        show={props.isUserMenuOpen}>
+          <div className={classNames("w-full", styles.navbarUserOverlay)} >
+            <div tabIndex={0} ref={autoFocus} onBlur={props.hideItselfMobile} 
+            onClick={event=>{event.stopPropagation()}} 
+            className={classNames("space-y-1 p-2 rounded-lg bg-gray-900 m-3 shadow-google", )}>
+              {props.children}
+            </div>
+          </div>
+        </Transition>
+      </span>
+    </span>
+  );
+};
+

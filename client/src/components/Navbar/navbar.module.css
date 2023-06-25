@@ -1,0 +1,68 @@
+.navbarZIndex {
+  z-index: 3;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.navbarOverlay {
+  z-index: 1;
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  max-height: 100vh;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.navbarOverlayMenu {
+  padding-top: 16px;
+  padding-bottom: 200px;
+  min-height: 100vh;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.navbarUserOverlay {
+  z-index: 1;
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  min-height: 100vh;
+  scrollbar-width: thin;
+}
+
+.navbarUserOverlayMenu {
+  overscroll-behavior: contain;
+  padding-top: 16px;
+  margin:15px;
+  z-index: 30;
+}
+
+.bellIconDimensions{
+  height: 30px;
+  width: 30px;
+}
+
+
+
+.userMenuGrid{
+  grid-template-columns: 1fr 2fr;
+
+}
+
+.userAvatarBig{
+  height: 100px;
+  width: 100px;
+}
+
+.userMenuScrollableNavigation{
+  max-height: 30vh;
+  padding-bottom: 20px;
+  overflow-y: scroll;
+  
+}
