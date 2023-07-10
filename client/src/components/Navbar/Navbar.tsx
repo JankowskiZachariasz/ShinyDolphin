@@ -1,27 +1,30 @@
 import { Fragment, useState, useContext, forwardRef, useRef, useEffect, useCallback } from "react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import type { Ref, MouseEvent  } from "react";
 import { Menu, Transition } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon, UserCircleIcon, BellIcon } from "@heroicons/react/24/outline";
 import styles from "./navbar.module.css";
 import { AppContext } from "../../utils/context";
 import { UserMenu } from "../UserMenu/UserMenu";
+import type { UserMenuNavItem } from "../UserMenu/UserMenu";
 import { NotificationMenu } from "../NotificationsMenu/NotificationMenu";
-import logo from "../../icons/logo.svg";
+import type { Notification } from "../NotificationsMenu/NotificationMenu";
+import { LogoNavbar } from '../Common/Logo'
 
-const navigation = [
+const navigationXd = [
   { name: "Home", href: "/", current: true },
   { name: "Services", href: "/services", current: false },
   { name: "About us", href: "#", current: false },
   { name: "Order cleaning", href: "#", current: false },
 ];
 
-const userMenuNavigation = [
+const userMenuNavigationXd = [
   { name: "Order history", href: "/services", current: false },
   { name: "Jobs", href: "#", current: false },
   { name: "Order history", href: "/services", current: false },
 ];
 
-const userNotifications = [
+const userNotifications :Array<Notification> = [
   { message: "Order history", read: false },
   { message: "Order history2", read: false },
   { message: "Order history3", read: false },
@@ -38,23 +41,24 @@ const userNotifications = [
   { message: "Order history7", read: false },
 ];
 
+export type NavigationItem = { name: string; href: string; current: boolean };
+
 //@ts-ignore
 function classNames(...classes) { return classes.filter(Boolean).join(" ");}
 
-export default function IndexPage() {
+export default function IndexPage(props :{
+  navigation: Array<NavigationItem>,
+  userMenuNavigation: Array<UserMenuNavItem>
+}) {
   const { setIsScrollLocked } = useContext(AppContext);
   const [isMobileNavigationMenuOpen, seIsMobileNavigationMenuOpen] = useState(false);
   const [isUserMenuOpen, seIsUserMenuOpen] = useState(false);
   const [isNotificationMenuOpen, seIsNotificationMenuOpen] = useState(false);
 
-  const DesktopUserMenuRef :React.RefObject<HTMLInputElement> = useRef(null);
-  DesktopUserMenuRef.current;
-
-  const autoFocus = useCallback((element : HTMLDivElement) => {
-    if (element) {
-      element.focus();
-    }
-  }, []);
+  const { data: session } = useSession();
+  const user = session?.user;
+  // const DesktopUserMenuRef :React.RefObject<HTMLInputElement> = useRef(null);
+  // DesktopUserMenuRef.current;
 
   const closeAllMenues = () => {
     seIsUserMenuOpen(false);
@@ -118,59 +122,67 @@ export default function IndexPage() {
         <nav className="mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="relative flex h-14 sm:h-16">
             <div className="flex flex-1 items-center sm:justify-start">
-              <Logo href="/"></Logo>
-              <DesktopNavigation navigation={navigation}></DesktopNavigation>
+              <LogoNavbar href="/"></LogoNavbar>
+              <DesktopNavigation navigation={props.navigation}></DesktopNavigation>
             </div>
             <div className="inset-y-0 right-0 flex justify-center items-center sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-
+            {user?(
+              <>
               {/* Notifications */}
               <FloatingMenu
-                isUserMenuOpen={isNotificationMenuOpen}
-                hideItselfMobile={()=>toggleMobileNotificationMenu(false)} 
-                hideItselfDesktop={()=>toggleNotificationMenu(false)}>
-                <NotificationMenu notifications={userNotifications}/>
-              </FloatingMenu>
-              <NavigationIconButton
-                additionalClasses="hidden sm:block hover:bg-gray-700 hover:text-white"
-                onClickHandler={toggleNotificationMenu}
-                additionalIconClasses={classNames("h-7 w-7 stroke-1.5",styles.bellIconDimensions)}
-                Icon = {BellIcon}
-                onMouseDown={(event)=>{if(isNotificationMenuOpen)event.preventDefault();}}
-                isActive={isNotificationMenuOpen}
-              ></NavigationIconButton>
-              <NavigationIconButton
-                additionalClasses="sm:hidden"
-                onClickHandler={toggleMobileNotificationMenu}
-                additionalIconClasses={classNames("h-7 w-7 stroke-1",styles.bellIconDimensions)}
-                Icon = {BellIcon}
-                onMouseDown={(event)=>{if(isNotificationMenuOpen)event.preventDefault();}}
-                isActive={isNotificationMenuOpen}
-              ></NavigationIconButton>
+               isUserMenuOpen={isNotificationMenuOpen}
+               hideItselfMobile={()=>toggleMobileNotificationMenu(false)} 
+               hideItselfDesktop={()=>toggleNotificationMenu(false)}>
+               <NotificationMenu notifications={userNotifications}/>
+             </FloatingMenu>
+             <NavigationIconButton
+               additionalClasses="hidden sm:block hover:bg-gray-700 hover:text-white"
+               onClickHandler={toggleNotificationMenu}
+               additionalIconClasses={classNames("h-7 w-7 stroke-1.5",styles.bellIconDimensions)}
+               Icon = {BellIcon}
+               onMouseDown={(event)=>{if(isNotificationMenuOpen)event.preventDefault();}}
+               isActive={isNotificationMenuOpen}
+             ></NavigationIconButton>
+             <NavigationIconButton
+               additionalClasses="sm:hidden"
+               onClickHandler={toggleMobileNotificationMenu}
+               additionalIconClasses={classNames("h-7 w-7 stroke-1",styles.bellIconDimensions)}
+               Icon = {BellIcon}
+               onMouseDown={(event)=>{if(isNotificationMenuOpen)event.preventDefault();}}
+               isActive={isNotificationMenuOpen}
+             ></NavigationIconButton>
 
               {/* User Menu */}
-              <FloatingMenu
-                isUserMenuOpen={isUserMenuOpen}
-                hideItselfMobile={()=>toggleMobileUserMenu(false)} 
-                hideItselfDesktop={()=>toggleUserMenu(false)}>
-                <UserMenu userMenu={userMenuNavigation} ></UserMenu>
-              </FloatingMenu>
-              <NavigationIconButton
-                additionalClasses="hidden sm:block hover:bg-gray-700 hover:text-white"
-                onClickHandler={toggleUserMenu}
-                additionalIconClasses="h-8 w-8 stroke-1.5"
-                onMouseDown={(event)=>{if(isUserMenuOpen)event.preventDefault();}}
-                isActive={isUserMenuOpen}
-                Icon = {UserCircleIcon}
-              ></NavigationIconButton>
-              <NavigationIconButton
-                additionalClasses="sm:hidden"
-                onClickHandler={toggleMobileUserMenu}
-                additionalIconClasses="h-8 w-8 stroke-1"
-                onMouseDown={(event)=>{if(isUserMenuOpen)event.preventDefault();}}
-                isActive={isUserMenuOpen}
-                Icon = {UserCircleIcon}
-              ></NavigationIconButton>
-
+             <FloatingMenu
+               isUserMenuOpen={isUserMenuOpen}
+               hideItselfMobile={()=>toggleMobileUserMenu(false)} 
+               hideItselfDesktop={()=>toggleUserMenu(false)}>
+               <UserMenu logoutAction={signOut} userMenu={props.userMenuNavigation} user={user}></UserMenu>
+             </FloatingMenu>
+             <NavigationIconButton
+               additionalClasses="hidden sm:block hover:bg-gray-700 hover:text-white"
+               onClickHandler={toggleUserMenu}
+               additionalIconClasses="h-8 w-8 stroke-1.5"
+               onMouseDown={(event)=>{if(isUserMenuOpen)event.preventDefault();}}
+               isActive={isUserMenuOpen}
+               Icon = {UserCircleIcon}
+             ></NavigationIconButton>
+             <NavigationIconButton
+               additionalClasses="sm:hidden"
+               onClickHandler={toggleMobileUserMenu}
+               additionalIconClasses="h-8 w-8 stroke-1"
+               onMouseDown={(event)=>{if(isUserMenuOpen)event.preventDefault();}}
+               isActive={isUserMenuOpen}
+               Icon = {UserCircleIcon}
+             ></NavigationIconButton>
+            </>
+            )
+            :(
+              <>
+                <button onClick={() => signIn()} className="hidden sm:block text-sm font-semibold leading-6 text-white" >Sign in <span aria-hidden="true">→</span></button>
+                <button onClick={() => signIn()} className="block sm:hidden mr-4 text-sm font-semibold leading-6 text-white" >Sign in </button>
+              </>
+            )}
               <Toggler isMenuOpen={isMobileNavigationMenuOpen}toggleMenu={toggleMobileNavigationMenu}></Toggler>
             </div>
           </div>
@@ -181,7 +193,7 @@ export default function IndexPage() {
         <Fragment>
           <div className={classNames("sm:hidden w-full bg-gray-900",styles.navbarOverlay)}>
             <div className={classNames("space-y-1 px-2 pb-3 pt-2",styles.navbarOverlayMenu )}>
-              <MobileNavigation navigation={navigation}></MobileNavigation>
+              <MobileNavigation navigation={props.navigation}></MobileNavigation>
             </div>
           </div>
         </Fragment>
@@ -191,27 +203,10 @@ export default function IndexPage() {
   );
 }
 
-const Logo = (props: { href?: string }) => {
-  return (
-    <Fragment>
-      <a href={props.href}>
-        <div className="flex flex-shrink-0 items-center">
-          <img
-            className="pl-2 block h-10 w-auto"
-            src={logo.src}
-            alt="Your Company"
-          />
-          <span className="text-turquoise-100 text-lg font-medium font-sans pl-2 mr-5">
-            Cleanwave
-          </span>
-        </div>
-      </a>
-    </Fragment>
-  );
-};
+
 
 const DesktopNavigation = (props: {
-  navigation: Array<{ name: string; href: string; current: boolean }>;
+  navigation: Array<NavigationItem>;
 }) => {
   return (
     <Fragment>
@@ -239,7 +234,7 @@ const DesktopNavigation = (props: {
 };
 
 const MobileNavigation = (props: {
-  navigation: Array<{ name: string; href: string; current: boolean }>;
+  navigation: Array<NavigationItem>;
 }) => {
   return (
     <Fragment>

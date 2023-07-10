@@ -17,19 +17,47 @@ const sql = postgres(process.env.DATABASE_URL)
 
 export default class Database{
     
-    connection : postgres.TransactionSql<{}>;
-    sql = sql;
+    connection : postgres.TransactionSql<{}> |  postgres.Sql<{}>;
+    sql;
     private allSelector : SObjectSelector;
 
-    constructor(tx : postgres.TransactionSql<{}>){
+    private constructor(tx : postgres.TransactionSql<{}> | postgres.Sql<{}>){
         this.connection = tx;
+        this.sql = sql;
         this.allSelector = new SObjectSelector(this);
     }
 
-    static async runTransaction(callback : (db : Database) => Promise<void> ){
+    static connectWithoutTransaction(){
+        try{
+            return new Database(sql);
+        }
+        catch(e: any){
+            console.error(e);
+            let message = e.message;
+            throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message });
+        }
+    }
+
+    static async runTransaction(callback : (db : Database) => Promise<any> ){
         try{
             return await sql.begin(async sql => {
                 return await callback(new Database(sql));
+            })
+        }
+        catch(e: any){
+            console.error(e);
+            let message = e.message;
+            throw new TRPCError({code: 'INTERNAL_SERVER_ERROR', message });
+        }
+    }
+
+    static async runUserContextTransaction(userId : string, callback : (db : Database) => Promise<any>){
+        try{
+            return await sql.begin(async sql => {
+                await sql`SET ROLE user1`
+                let result = await callback(new Database(sql));
+                await sql`RESET ROLE`
+                return result;
             })
         }
         catch(e: any){
@@ -79,7 +107,7 @@ export default class Database{
             const rawResults = await this.connection`
                 UPDATE ${sql.unsafe('public."' + _modelName + '"')} as t 
                 SET ${sql.unsafe(DbUtil.getSqlUpdateAssignmentString(fieldSet, 'u'))}
-                FROM (values ${sql(DbUtil.getSqlUpdateArraysFromSObjects(fieldSet, preUpdateRecords))}) 
+                FROM (values ${sql.unsafe(DbUtil.getSqlUpdateArraysFromSObjects(fieldSet, preUpdateRecords))}) 
                 AS u (${sql(fieldSet)}) 
                 WHERE CAST(u.id AS UUID) = t.id
                 RETURNING *;`

@@ -1,160 +1,67 @@
 import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server';
 import { CreateHTTPContextOptions, createHTTPServer } from './_openforce/TrpcStandaloneServer'
 import { CreateWSSContextFnOptions, applyWSSHandler } from '@trpc/server/adapters/ws';
-import { observable } from '@trpc/server/observable';
 import { User } from './_openforce/Models'
-import UserSelector from './classes/UserSelector'
-import Database from './_openforce/Database';
+import { SESSION_COOKIE_NAME } from '../../client/src/utils/trpc'
 import PGPubsub  from 'pg-pubsub';
 import ws from 'ws';
-import { z } from 'zod';
+var cookie = require('cookie');
 import cors from 'cors';
-import crypto from 'crypto'
-var jwt = require('jsonwebtoken');
 import * as dotenv from 'dotenv'; 
 dotenv.config();
 
-
+const AUTHORIZATION_HEADER_KEY = 'authorization';
 
 if(typeof process.env.DATABASE_URL !== 'string'){
   process.exit(0);
 }
 
-import { TriggerMaster } from './_openforce/TriggerMaster';
-
 export const pubsubInstance = new PGPubsub(process.env.DATABASE_URL);
-
-export const SESSION_COOKIE_NAME = 'next-auth.session-token='
-
 pubsubInstance.addChannel('channelName', function (channelPayload) {
   console.log(channelPayload);
 });
 
 
-//prisma.$use(TriggerMaster.runTriggers)
-
-// This is how you initialize a context for the server
-function createContext(opts: CreateHTTPContextOptions | CreateWSSContextFnOptions):{user : any, _tx: never} {
-  let user;
-  if(typeof opts.req.headers.cookie == 'string'){
-    opts.req.headers.cookie.split(' ').forEach(cookie => {
-      if(cookie.startsWith(SESSION_COOKIE_NAME)){
-        let token = cookie.substring(SESSION_COOKIE_NAME.length, cookie.length);
-        const JWT_KEY_PUBLIC = process.env.JWT_KEY_PUBLIC?.replace(/\\n/g, '\n');
-        user = jwt.verify(token, JWT_KEY_PUBLIC,  { algorithm: 'RS256', allowInsecureKeySizes: true });
-        return {user};
-      }
-    })
+function createContext(opts: CreateHTTPContextOptions | CreateWSSContextFnOptions):{token : string | null, user? : User} {
+  if(Object.keys(opts.req.headers).includes(AUTHORIZATION_HEADER_KEY)){
+    //@ts-ignore
+    const token :string = opts.req.headers[AUTHORIZATION_HEADER_KEY];
+    return {token};
   }
-  //@ts-ignore
-  return {user};
+  if(typeof opts.req.headers.cookie !== 'string'){
+    return {token : null};
+  }
+  const cookies = cookie.parse(opts.req.headers.cookie);
+  if(Object.keys(cookies).includes(SESSION_COOKIE_NAME)){
+    let token = cookies[SESSION_COOKIE_NAME];
+    return {token};
+  }
+  return {token : null};
 }
-type Context = inferAsyncReturnType<typeof createContext>;
-type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
-const t = initTRPC.context<Context>().create();
 
+type Context = inferAsyncReturnType<typeof createContext>;
+const t = initTRPC.context<Context>().create();
 export const middleware = t.middleware;
 export const publicProcedure = t.procedure;
 export const router = t.router;
 
-const startUserTransaction = middleware(async (opts) => {
-  const { ctx } = opts;
-  if(opts.ctx.user?.email !== 'jankowski.zachariasz@gmail.com'){
-    throw new TRPCError({code: 'UNAUTHORIZED', message: 'Invalid Credentials' });
-  }
-  //@ts-ignore
-  let _tx : never = opts.ctx.prisma;
-  return await opts.next(opts);
-});
 
+import { UserAuthenticationController } from './_openforce/UserAuthenticationController'
+import { CarController } from './classes/CarController'
 
-
-
-const startTx = publicProcedure.use(startUserTransaction);
-
-
-import AuthorizationHandler from './_openforce/AuthorizationHandler'
-import { Prisma } from '@prisma/client';
 
 const greetingRouter = router({
   objects: router({
-    login : AuthorizationHandler,
-    Account: publicProcedure.input(z.object({name: z.string()}),)
-            .query(async ({input,ctx:{user}}) => {
-              console.log('jestesmy', 'tutaj1');
-
-
-              await Database.runTransaction(async db => {
-
-                let u1 : User = {
-                  _modelName: 'User',
-                  email: 'jankowski.zachariasz@gmail.com',
-                  password: '1234567',
-                  role: 'System Administrator'
-                };
-                await db.insert([u1]);
-                console.log('u1', u1);
-                const userSelector = new UserSelector(db);
-                let users : Array<User> = await userSelector.selectAllUsers();
-                let results = await db.delete(users);
-                console.log('resultsUpdate', results.get('User')?.command);
-                console.log('resultsUpdate', results.get('User')?.statement);
-              })
-
-
-
-            })
-  }),
-  hello: publicProcedure
-    .input(z.object({name: z.string()}),)
-    .query(({ input }) => `Hello, ${input.name}!`),
-  xd: publicProcedure
-  .input(
-    z.object({
-      xdMaByc: z.string(),
-    }),
-  )
-  .query(({ input }) => `xdMaByc, ${input.xdMaByc}!`)
-});
-
-
-const postRouter = router({
-  createPost: publicProcedure
-    .input(
-      z.object({
-        title: z.string(),
-        text: z.string(),
-      }),
-    )
-    .mutation(({ input }) => {
-      // imagine db call here
-      return {
-        id: `${Math.random()}`,
-        ...input,
-      };
-    }),
-  randomNumber: publicProcedure.subscription(() => {
-    return observable<{ randomNumber: number }>((emit) => {
-      const timer = setInterval(() => {
-        // emits a number every second
-        emit.next({ randomNumber: Math.random() });
-      }, 20000);
-
-      return () => {
-        clearInterval(timer);
-      };
-    });
-  }),
+    login : UserAuthenticationController
+  })
 });
 
 // Merge routers together
 const appRouter = router({
   greeting: greetingRouter,
-  post: postRouter,
+  authentication: UserAuthenticationController,
+  car: CarController
 });
-
-//console.log(appRouter.greeting.hello._def)
-//console.log(appRouter.greeting.hello._procedure)
 
 export type AppRouter = typeof appRouter;
 

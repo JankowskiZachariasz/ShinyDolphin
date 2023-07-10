@@ -14,7 +14,6 @@ export const triggerMap = new Map<Prisma.ModelName, { new(): TriggerBase }>([
 export class TriggerMaster{
 
     static async runBeforeInsert(_modelName : Prisma.ModelName, recordsNew: Array<SObject>, db: Database) : Promise<void> {
-        console.log('robimy', 'runBeforeInsert');
         const handlerClass = triggerMap.get(_modelName)
         if(!handlerClass){
             return;

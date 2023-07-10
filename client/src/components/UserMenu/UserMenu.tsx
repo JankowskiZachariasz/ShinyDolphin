@@ -9,10 +9,14 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
+export type UserMenuNavItem = { name: string; href: string; current: boolean };
+
 export const UserMenu = forwardRef(
   (
     props: {
-      userMenu: Array<{ name: string; href: string; current: boolean }>;
+      userMenu: Array<UserMenuNavItem>;
+      logoutAction: ()=>void
+      user: any
     },
     forwardedRef: Ref<HTMLDivElement>
   ) => {
@@ -21,22 +25,29 @@ export const UserMenu = forwardRef(
         <div ref={forwardedRef} className="bg-black rounded-lg">
           <div className={"text-white grid py-4 " + styles.userMenuGrid}>
             <div className="grid content-center justify-center ">
-              <UserCircleIcon
-                className={"stroke-1 text-gray-200 " + styles.userAvatarBig}
-                aria-hidden="true"
+              {props.user.picture?(
+                <img
+                className={styles.userAvatarBig}
+                src={props.user.picture}
+                alt="Your Company"
               />
+              ):
+              <UserCircleIcon
+              className={"stroke-1 text-gray-200 " + styles.userAvatarBig}
+              aria-hidden="true"
+            />}
             </div>
             <div className="grid content-center">
               <div>
                 <div className="text-base text-gray-100">
-                  Zachariasz Jankowski
+                  {props.user?.firstName + ' ' + props.user?.lastName}
                 </div>
                 <div className="text-xs text-gray-200">
-                  jankowski.zachariasz@gmail.com
+                  {props.user?.email}
                 </div>
                 <div className="mt-1">
                   <span className="inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                    Employee
+                  {props.user?.role}
                   </span>
                 </div>
               </div>
@@ -47,12 +58,12 @@ export const UserMenu = forwardRef(
             <div className="mb-5 mr-3">
               <AccentButton
                 text="Manage account"
-                handleClick={(event) => event.preventDefault()}
+                handleClick={props.logoutAction}
                 href="#"
               ></AccentButton>
               <AccentButton
                 text="Logout"
-                handleClick={(event) => event.preventDefault()}
+                handleClick={props.logoutAction}
                 href="#"
               ></AccentButton>
             </div>
@@ -68,7 +79,7 @@ export const UserMenu = forwardRef(
 );
 
 const UserMenuNavigation = (props: {
-  navigation: Array<{ name: string; href: string; current: boolean }>;
+  navigation: Array<UserMenuNavItem>;
 }) => {
   return (
     <Fragment>

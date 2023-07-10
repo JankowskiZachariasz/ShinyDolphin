@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client'
-import postgres from 'postgres'
+import type {RowList, Row} from 'postgres'
 import { SObject } from './Models'
 
 export default class DatabaseUtility{
@@ -86,46 +86,91 @@ export default class DatabaseUtility{
     }
 
     static getFieldSetFromSObjectList(updateList : Array<any>){
-        const toReturn : Array<string> = [];
+        const toReturn : Set<string> = new Set();
         for(const record of DatabaseUtility.stripTechnicalFields(updateList)){
-            
-            toReturn.push(...Object.keys(record))
+            Object.keys(record).forEach(field => {
+                toReturn.add(`${field}`)
+            })
         }
-        return new Set(toReturn);
+        return toReturn;
     }
 
     static getSqlUpdateAssignmentString(fieldSet : Array<string>, sourceName : string){
         let toReturn : string = '';
         for(const field of fieldSet){
-            if(field === 'id'){
-                toReturn += `, ${field} = CAST(${sourceName}.${field} AS UUID)`;
+            if(field.endsWith('Id') || field === 'id'){
+                toReturn += `, "${field}" = CAST(${sourceName}."${field}" AS UUID)`;
                 continue;
             }
-            toReturn += `, ${field} = ${sourceName}.${field}`
+            if(field === 'authProvider'){
+                toReturn += `, "${field}" = CAST(${sourceName}."${field}" AS "Providers")`;
+                continue;
+            }
+            toReturn += `, "${field}" = ${sourceName}."${field}"`
         }
         return toReturn.substring(1);
     }
 
     static getSqlUpdateArraysFromSObjects(fieldSet : Array<string>, updateData : Array<SObject>){
-        let toReturn : Array<Array<any>> = [];
+        let values : Array<Array<any>> = [];
         for(let i = 0; i< updateData.length; i++){
             let currentArray : Array<any> = [];
             let record = updateData[i];
             for(const field of fieldSet){
                 //@ts-ignore
-                currentArray.push(record[field]); 
+                currentArray.push(record[field]? record[field] : ''); 
             }
-            toReturn.push(currentArray);
+            values.push(currentArray);
         }
+        let toReturn = '';
+        values.forEach(row => {  
+            const completeRow = row.reduce((rowAccumulator, fieldValue) => {
+                let toReturn = rowAccumulator + (rowAccumulator? (', ') : (' ')) ;
+                switch(typeof fieldValue){
+                    case('boolean'):
+                    case('number'):{
+                        toReturn += `${fieldValue}`;
+                        break;
+                    }
+                    default:{
+                        toReturn += `'${fieldValue}'`;
+                    }
+                }
+                return toReturn;
+            },'');
+            toReturn += `${toReturn?', ':''}( ${completeRow} )`
+        })
+        console.log(toReturn)
         return toReturn;
     }
 
-    static appendTechnicalFields(input : postgres.RowList<postgres.Row[]>, targetModelName : Prisma.ModelName){
+    static appendTechnicalFields(input : RowList<Row[]>, targetModelName : Prisma.ModelName){
         const toReturn : Array<SObject> = [];
         for(const record of input){
             record._modelName = targetModelName;
             //@ts-ignore
             toReturn.push(record)
+        }
+        return toReturn;
+    }
+
+    static queryRelationship(){
+
+    }
+
+    static _col<T>(refArray : Array<keyof Omit<{[key in keyof T]: boolean}, "_modelName">>, ns : string){
+        const toReturn : Array<string> = [];
+        for(let i in refArray){
+            toReturn.push(`${ns}.${String(refArray[i])}`);
+        }
+        return toReturn;
+    }
+
+    static _colAliased<T>(refArray : Array<keyof Omit<{[key in keyof T]: boolean}, "_modelName">>, ns : string){
+        let toReturn : string = '';
+        for(let i = 0; i < refArray.length; i++){
+            //@ts-ignore
+            toReturn += (`${ns}."${String(refArray[i])}" AS "${ns}_${String(refArray[i]) + ((i + 1) === refArray.length?('"'):('", '))}`);
         }
         return toReturn;
     }

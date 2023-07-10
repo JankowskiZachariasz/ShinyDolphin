@@ -1,5 +1,4 @@
-import { LabelsUsage } from '../../../server/src/metadata/Label'
-import {supportedLocales} from '../middleware'
+import { LabelsUsage } from '../metadata/Label'
 
 export const getFilesystemLabelsForRoute = (route : keyof typeof LabelsUsage, locale : string | undefined | string[]) => {
     //@ts-ignore

@@ -7,7 +7,9 @@ import { UserCircleIcon } from "@heroicons/react/24/outline";
 //@ts-ignore
 function classNames(...classes) { return classes.filter(Boolean).join(" ");}
 
-export const NotificationMenu = forwardRef((props: { notifications: Array<{ message: string, read: boolean }> },
+export type Notification = { message: string, read: boolean };
+
+export const NotificationMenu = forwardRef((props: { notifications:  Array<Notification>},
     forwardedRef : Ref<HTMLDivElement>) => {
     return (
         <div className={"overflow-auto " + styles.userMenuScrollableNavigation} ref={forwardedRef}>
@@ -17,7 +19,7 @@ export const NotificationMenu = forwardRef((props: { notifications: Array<{ mess
   });
 
   const Notifications = (props: {
-    notifications: Array<{ message: string, read: boolean }>;
+    notifications: Array<Notification>;
   }) => {
     return (
       <Fragment>

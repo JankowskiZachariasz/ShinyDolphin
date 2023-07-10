@@ -22,4 +22,15 @@ export default class SObjectSelector{
         return DatabaseUtility.appendTechnicalFields(results, _modelName)
     }
 
+    async selectAllFieldsFromDynamicTableByNames(names : Array<string>, _modelName : Prisma.ModelName){
+        let _table = this.db.sql.unsafe('public."' + _modelName + '"');
+        const results = await this.db.connection`
+        SELECT *
+        FROM ${_table} 
+        WHERE
+            name IN ${this.db.sql(names)}
+        `
+        return DatabaseUtility.appendTechnicalFields(results, _modelName)
+    }
+
 }

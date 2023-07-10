@@ -1,12 +1,12 @@
 import { trpc } from "../../utils/trpc";
-import { signIn, signOut, useSession } from "next-auth/react";
+
 import { useState, useContext } from "react";
 import type {
   InferGetStaticPropsType,
   GetStaticProps,
   GetStaticPaths,
 } from "next";
-import type { LabelsUsage } from "../../../../server/src/metadata/Label";
+import type { LabelsUsage } from "../../metadata/Label";
 import { supportedLocales } from "../../middleware";
 import { getFilesystemLabelsForRoute } from "../../utils/labelProvider";
 import Navbar from "../../components/Navbar/Navbar";
@@ -18,25 +18,24 @@ export default function IndexPage({
   labels,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   // 💡 Tip: CMD+Click (or CTRL+Click) on `greeting` to go to the server definition
-  const [xdText, setXdText] = useState("Nie było calla");
-  const [sub, setSub] = useState(45.7);
-  const { isScrollLocked } = useContext(AppContext);
+  const [results, setResults] = useState("Nie było calla");
 
   const client = trpc.useContext().client;
-  const { data: session } = useSession();
-  const email = session?.user?.email;
+  // const { data: session } = useSession();
+  // const user = session?.user;
   //@ts-ignore
 
-  async function fetchXd() {
-    console.log(window.location.href);
-    //let txt = await client.greeting.objects.Account.query({name: 'Ihhhhaaaa'},{
-    //@ts-ignore
-    //context:{token: session?.user?.token}});
+  async function buttonClick() {
+    let cars = await client.car.getCars.mutate();
+    setResults(JSON.stringify(cars));
   }
 
   return (
     <div>
-      <Navbar></Navbar>
+      <Navbar
+        navigation={[]}
+        userMenuNavigation={[]}
+      ></Navbar>
       <div className="bg-white">
         <header className="absolute inset-x-0 top-0 z-50"></header>
         <div className="relative isolate px-6 pt-14 lg:px-8">
@@ -64,9 +63,9 @@ export default function IndexPage({
                 fugiat aliqua.
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
-                <a href="#" className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                <button onClick={buttonClick} className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                   Get started
-                </a>
+                </button>
                 <a
                   href="#"
                   className="text-sm font-semibold leading-6 text-gray-900"
@@ -74,6 +73,7 @@ export default function IndexPage({
                   Learn more <span aria-hidden="true">→</span>
                 </a>
               </div>
+              <div className="font-extralight">{results}</div>
             </div>
           </div>
           <div

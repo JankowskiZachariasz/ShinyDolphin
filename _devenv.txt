@@ -41,6 +41,7 @@ docker run --name metabase_server `
 --env SERVER_PATH=backend `
 -p 2022:2022 -d 192.168.0.118:5000/metabase/server:latest
 
+docker build ./ -f postgres.Dockerfile -t netrunners/pg
 docker run --name custompg -p 5455:5432 
 -e POSTGRES_USER=postgres 
 -e POSTGRES_PASSWORD=postgres 

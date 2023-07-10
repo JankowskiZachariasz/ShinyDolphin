@@ -12,14 +12,56 @@ datasource db {
 
 model User {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  firstName String
+  lastName String
   email String
-  password String
+  authProvider Providers @default(CREDENTIALS)
+  password String?
+  mfaRequired Boolean @default(false)
   role String
-  mfaRequired Boolean?
+  picture String?
+  sessions Session[]
+  individual Individual? @relation(fields: [individualId], references: [id])
+  individualId String? @db.Uuid
+  @@unique([email, authProvider])
+}
+
+model Individual {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  firstName String
+  lastName String
+  email String
+  users User[]
+}
+
+model Session {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deviceName String?
+  expires Int?
+  user User @relation(fields: [userId], references: [id])
+  userId String @db.Uuid
 }
 
 model Car {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   brand String
   model String
+}
+
+
+//<------ METADATA ------>
+
+model Label__mtd {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String
+  en String
+  pl String?
+  de String?
+  @@unique([name])
+}
+
+enum Providers {
+  CREDENTIALS
+  GOOGLE
+  SELF
 }
